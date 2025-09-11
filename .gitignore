@@ -1,0 +1,28 @@
+# Python virtual environment
+venv/
+env/
+.env/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# VS Code settings
+.vscode/
+
+# Environment variables
+.env
+
+# Data files
+*.csv
+*.xlsx
+*.xls
+!data/sample_*.xlsx  # Allow sample data files to be versioned
