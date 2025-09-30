@@ -9,7 +9,7 @@ Ce projet vise à réaliser des stress tests climatiques sur un portefeuille de 
 ├── data/                  # Dossier contenant les données
 │   ├── credit_ratings/    # Données des ratings de crédit
 │   ├── macro_data/       # Variables macroéconomiques
-│   └── ngfs_data/        # Données nGFS
+│   └── ngfs_data/        # Données NGFS
 ├── notebooks/            # Jupyter notebooks pour l'analyse
 ├── src/                 # Code source Python
 └── requirements.txt     # Dépendances du projet
@@ -49,4 +49,11 @@ jupyter notebook
 
 - `credit_ratings.xlsx`: Contient les données historiques des ratings de crédit du portefeuille
 - `macro_variables.xlsx`: Contient les variables macroéconomiques
-- `ngfs_scenarios.xlsx`: Contient les données des scénarios nGFS
+- `ngfs_scenarios.xlsx`: Contient les données des scénarios NGFS
+
+## Modification des fichiers
+
+Parfois, lorsque vous avez déjà imorté un fichier (par exemple, import importing), si vous modifiez ce fichier et que vous reimportez ce fichier modifié, le kernela enregistré l'ancienne version du fichier et ne lemet pasà jour. Vous devrez exécuter ces lignes de code :
+
+import importlib
+importlib.reload(nom_fichier.py)
