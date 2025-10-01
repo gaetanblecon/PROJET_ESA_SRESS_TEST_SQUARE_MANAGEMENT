@@ -70,4 +70,5 @@ pip install -r requirements.txt
 Parfois, lorsque vous avez déjà imorté un fichier (par exemple, import importing), si vous modifiez ce fichier et que vous réimportez ce fichier modifié, le kernel a enregistré l'ancienne version du fichier et ne le met pas à jour. Vous devrez exécuter ces lignes de code :
 
 import importlib # A faire uniquement une fois évidemment
+
 importlib.reload(nom_fichier.py)
