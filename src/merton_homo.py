@@ -97,28 +97,73 @@ class MertonHomogeneous:
     # Objet Zt
     # ------------------
     class Zt:
+
         def __init__(self, p_ttc, p_pit, barriers, rho):
-            self.p_ttc = p_ttc
-            self.p_pit = p_pit
+            self.p_ttc = p_ttc      # scalaire TTC homogène
+            self.p_pit = p_pit      # série PIT observée
             self.barriers = barriers
-            self.rho = rho
-            self.values = None
+            self.rho = rho          # scalaire homogène
+            self.values = None      # Zt values
+            self.predicted_pit = None  # PD PIT prédite par Merton
 
         def compute(self):
             z_t_values = pd.Series(index=self.p_pit.index, dtype=float)
             for date in z_t_values.index:
-                pd_pit = self.p_pit.loc[date]
-                z_t = (1 / np.sqrt(self.rho)) * self.barriers - norm.ppf(pd_pit) * np.sqrt(1 - self.rho)
+                pd_pit_obs = self.p_pit.loc[date]
+                # Calcul direct de Zt
+                z_t = (self.barriers - norm.ppf(pd_pit_obs) * np.sqrt(1 - self.rho)) / np.sqrt(self.rho)
+                #z_t = (1 / np.sqrt(self.rho)) * self.barriers - norm.ppf(pd_pit_obs) * np.sqrt(1 - self.rho)
                 z_t_values.loc[date] = z_t
+
             self.values = z_t_values
             return self
 
-        def plot(self):
+        def plotting_zt(self):
             plt.figure(figsize=(10, 4))
             self.values.plot(title="Facteur systémique Zt (Merton homogène)")
             plt.show()
 
-        def mse(self, target=None):
-            if target is None:
-                target = pd.Series(0, index=self.values.index)
-            return ((self.values - target) ** 2).mean()
+        def predict_pit(self):
+            """
+            Calcule les PD PIT théoriques selon le modèle de Merton homogène
+            en utilisant les valeurs de Zt optimisées.
+            """
+            if self.values is None:
+                raise ValueError("Vous devez d'abord lancer compute() pour obtenir Zt")
+
+            norm_inv = norm.ppf(self.p_ttc)  # scalaire TTC
+            preds = pd.Series(index=self.values.index, dtype=float)
+            for date, z_t in self.values.items():
+                adjusted = (norm_inv - np.sqrt(self.rho) * z_t) / np.sqrt(1 - self.rho)
+                preds.loc[date] = norm.cdf(adjusted)
+
+            self.predicted_pit = preds
+            return preds
+
+        def plot_pred_obs(self):
+            """
+            Trace la comparaison entre PD PIT observée et PD PIT prédite.
+            """
+            if self.predicted_pit is None:
+                self.predict_pit()
+
+            plt.figure(figsize=(10, 5))
+            plt.plot(self.p_pit.index, self.p_pit.values, label="Observed PD PIT", color="blue")
+            plt.plot(self.predicted_pit.index, self.predicted_pit.values,
+                    linestyle="--", label="Predicted PD PIT (Merton)", color="red")
+            plt.title("Observed vs Predicted PIT Default Probabilities (Merton Homogène)")
+            plt.xlabel("Date")
+            plt.ylabel("Default Probability")
+            plt.legend()
+            plt.grid(alpha=0.3)
+            plt.show()
+
+        def mse(self):
+            """
+            Calcule l'erreur quadratique moyenne entre PD PIT observée et prédite.
+            """
+            if self.predicted_pit is None:
+                self.predict_pit()
+
+            diff = self.p_pit - self.predicted_pit
+            return (diff ** 2).mean()

@@ -65,9 +65,7 @@ class CreditMetrics:
     def _calculate_migration_ttc(self, transition_matrix):
         row_sums = transition_matrix.sum(axis=1)
         migration_ttc = transition_matrix.div(row_sums, axis=0)
-        if "D" not in migration_ttc.index:
-            migration_ttc.loc["D"] = 0
-        migration_ttc.loc["D"] = [0] * (len(migration_ttc.columns))
+
         return migration_ttc
 
     def _create_complete_monthly_migration_counts(self, df):
@@ -89,7 +87,6 @@ class CreditMetrics:
         migrations_count_complete["transition_prob"] = (
             migrations_count_complete["count"] / migrations_count_complete["total_count"]
         ).fillna(0)
-        print(migrations_count_complete)
         return migrations_count_complete
 
     def _create_matrice_PIT(self, migrations_complete):
@@ -108,7 +105,6 @@ class CreditMetrics:
                 cumulative_sum += row.iloc[j]
                 barrier_matrix[idx, j] = norm.ppf(cumulative_sum)
         barrier_matrix_df = pd.DataFrame(barrier_matrix, index=ttc_matrix.index, columns=ttc_matrix.columns)
-        barrier_matrix_df = barrier_matrix_df.drop("D", axis=0)
         return barrier_matrix_df
 
     def _calculate_rho(self, pd_series):
@@ -125,7 +121,8 @@ class CreditMetrics:
             self.rho = rho
             self.values = None
             self.probability_migrations = None # Calcule les migrations avec le Zt extrait
-            self.mse = None
+            self.mse_global = None
+            self.mse_matrix = None
 
         def _calculate_pit_probabilities(self, z_t):
             ratings = self.barrier_matrix.index
@@ -173,13 +170,26 @@ class CreditMetrics:
 
             self.values = pd.Series(zt_by_time).sort_index()
             self.probability_migrations = pd.concat(all_probs).set_index(["date", "rating", "next_rating"])
-            self.mse = self._compute_mse()
+            self.mse_global, self.mse_matrix = self.mse() 
             return self
 
-        def _compute_mse(self):
-            """Calcule la Mean Squared Error entre observed et recalculated."""
-            diff = self.probability_migrations["observed"] - self.probability_migrations["recalculated"]
-            return np.mean(diff**2)
+        # def _compute_mse(self):
+        #     """Calcule la Mean Squared Error entre observed et recalculated."""
+        #     diff = self.probability_migrations["observed"] - self.probability_migrations["recalculated"]
+        #     return np.mean(diff**2)
+        def mse(self):
+            """Calcule la Mean Squared Error globale et par rating->next_rating."""
+            df = self.probability_migrations.copy()
+            df["squared_error"] = (df["observed"] - df["recalculated"])**2
+
+            # MSE global
+            mse_global = df["squared_error"].mean()
+
+            # MSE par rating -> next_rating
+            mse_matrix = df.groupby(["rating", "next_rating"])["squared_error"].mean().unstack().fillna(0)
+
+            return mse_global, mse_matrix
+
         
         def plotting_zt(self):
             plt.figure(figsize=(10, 4))

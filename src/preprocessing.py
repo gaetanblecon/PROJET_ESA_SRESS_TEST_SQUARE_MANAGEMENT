@@ -25,8 +25,8 @@ def prepare_corporate_ratings(file_path: str) -> pd.DataFrame:
         FileNotFoundError: Si le fichier spécifié dans file_path n'est pas trouvé.
         Exception: Pour toute autre erreur lors de la lecture ou du traitement.
     """
-    # data = pd.read_excel(file_path)
-    data = pd.read_csv(file_path)
+    data = pd.read_excel(file_path)
+    # data = pd.read_csv(file_path)
 
     # --- 2. Conversion de la colonne de date ---
     # La colonne 'rating_action_date' est convertie au format datetime.

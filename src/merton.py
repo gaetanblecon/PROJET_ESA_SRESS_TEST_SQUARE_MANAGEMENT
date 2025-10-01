@@ -35,7 +35,7 @@ class Merton:
         self.pd_ttc = self._calculate_pd_ttc(self.transition_matrix)
 
 
-          # 3. Barrières
+        # 3. Barrières
         self.barrier = self._calculate_barrier(self.pd_ttc)
 
         # 4. PD PIT
@@ -151,11 +151,24 @@ class Merton:
             self.probabilities = pd.concat(all_probs).set_index(['date','rating'])
             return self
 
+        # def mse(self):
+        #     if self.probabilities is None:
+        #         raise ValueError("Lancez optimize() avant de calculer la MSE")
+        #     diff = self.probabilities['observed'] - self.probabilities['recalculated']
+        #     return np.nanmean(diff**2)
         def mse(self):
             if self.probabilities is None:
                 raise ValueError("Lancez optimize() avant de calculer la MSE")
+
             diff = self.probabilities['observed'] - self.probabilities['recalculated']
-            return np.nanmean(diff**2)
+
+            # MSE globale
+            mse_global = np.nanmean(diff**2)
+        
+            # MSE par rating
+            mse_by_rating = diff.groupby(level="rating").apply(lambda x: np.nanmean(x**2))
+
+            return mse_global, mse_by_rating
 
         def plotting_zt(self):
             plt.figure(figsize=(10,4))
