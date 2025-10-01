@@ -54,7 +54,7 @@ pip install -r requirements.txt
 ## Utilisation
 
 1. Activer l'environnement virtuel (voir ci-dessus)
-2. Lancer le notebook : data_management.ipynb et exécutez les différentes cellules.
+2. Lancer le notebook : main.ipynb et exécutez les différentes cellules.
 
 ## Données
 
